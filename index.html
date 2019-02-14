@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Concurrency? 😳</title>
+
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/beige.css" id="theme">
+		<link rel="stylesheet" href="css/app.css">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>What even is concurrency??</h1>
+				</section>
+
+				<section>
+					<h2>Hi, I'm Jacob!</h2>
+					<p>@jcbwlkr on Twitter</p>
+					<p>Community Engineer at</p>
+					<img class="logo" src="img/ardanlabs-logo.png" alt="Ardan Labs" />
+				</section>
+
+				<section>
+					<img class="comic" src="img/seinfeld.jpg" alt="What's the deal?" />
+				</section>
+
+				<section>
+					<h2>A Serial Program</h2>
+					<img class="comic" src="img/serial.svg" alt="A Serial Program" />
+				</section>
+
+				<section>
+					<h2>A Concurrent Program</h2>
+					<img class="comic" src="img/concurrent.svg" alt="A concurrent Program" />
+				</section>
+
+				<section>
+					<blockquote>&ldquo;Concurrency is about dealing with lots of things at once.</blockquote>
+					<blockquote>Parallelism is about doing lots of things at once.&rdquo;</blockquote>
+					- Rob Pike in <u><a href="https://blog.golang.org/concurrency-is-not-parallelism">Concurrency is not Parallelism</a></u>.
+				</section>
+
+				<section>
+					Modeling multiple independent processes.
+				</section>
+
+				<section>
+					<section>
+						Can prevent this problem
+					</section>
+
+					<section
+						data-background-video="img/wot-cpus.mp4"
+						data-background-video-muted=true
+						data-background-size="contain"
+					>
+					</section>
+
+					<section>
+						Video source: <a href="https://imgur.com/gallery/mV9bFz7">https://imgur.com/gallery/mV9bFz7</a>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>The OS, CPU, and Threads</h2>
+					</section>
+					<section data-background="img/ThreadDiagram.png" data-background-size="contain" >
+					</section>
+					<section>
+						<p>Source: <a href="https://www.javamex.com/tutorials/threads/how_threads_work.shtml">https://www.javamex.com/tutorials/threads/</a></p>
+					</section>
+					<section>
+						<h2>Thread States</h2>
+					</section>
+					<section data-background="img/threadstates.gif" data-background-size="contain">
+					</section>
+					<section>
+						<p>Source: <a href="http://journals.ecs.soton.ac.uk/java/tutorial/java/threads/states.html">http://journals.ecs.soton.ac.uk/java/tutorial/java/threads/states.html</a></p>
+					</section>
+				</section>
+
+				<section>
+					<h2>Facts</h2>
+					<ul>
+						<li>Concurrency is hard.</li>
+					</ul>
+				</section>
+
+				<section>
+					<img class="comic" src="img/Go-Logo_Blue.svg" alt="Go" />
+				</section>
+
+				<!--<section>-->
+					<!--<img class="comic" src="img/depressed-developer-10.png" alt="Depressed Developer" />-->
+					<!--<small>Source: <a href="http://turnoff.us/geek/the-depressed-developer-10/">http://turnoff.us/geek/the-depressed-developer-10/</a></small>-->
+				<!--</section>-->
+
+				<section>
+					<section>
+						<h2>The Go Scheduler</h2>
+						<img class="comic" src="img/scheduler.svg" alt="The Go Scheduler" />
+					</section>
+
+					<section data-transition="none">
+						<h2>The Go Scheduler</h2>
+						<img class="comic" src="img/scheduler-2.svg" alt="The Go Scheduler" />
+					</section>
+				</section>
+
+				<section>
+					<h2>Facts</h2>
+					<ul>
+						<li>Concurrency is hard.</li>
+						<li class="fragment">Go makes concurrency easier.</li>
+						<li class="fragment">Concurrency is still not easy.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Goroutines</h2>
+					<pre><code data-trim data-noescape>
+func main() {
+	go sing("Jacob", 3)
+	sing("Anna", 3)
+}
+					</pre></code>
+				</section>
+
+				<section>
+					<h2>⚠️ Dangers of Concurrency⚠️</h2>
+					<ul>
+						<li>Work can be incomplete.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>WaitGroups</h2>
+					<pre><code data-trim data-noescape>
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		sing("Jacob", 3)
+		wg.Done()
+	}()
+
+	sing("Anna", 3)
+
+	wg.Wait()
+}
+					</pre></code>
+				</section>
+
+				<section>
+					<h2>Shared Memory</h2>
+					<pre><code data-trim data-noescape>
+const workers = 2
+
+var counter int
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(workers)
+
+	for i := 0; i &lt; workers; i++ {
+		go func() {
+			for i := 0; i &lt; 2; i++ {
+				counter++
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	fmt.Println("Final counter", counter)
+}
+					</pre></code>
+				</section>
+
+				<section>
+					<h2>⚠️ Dangers of Concurrency⚠️</h2>
+					<ul>
+						<li>Work can be incomplete.</li>
+						<li>Data can get corrupted.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Mutexes</h2>
+					<pre><code data-trim data-noescape>
+const workers = 2000
+
+var counter int
+var mu sync.Mutex
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(workers)
+
+	for i := 0; i &lt; workers; i++ {
+		go func() {
+			for i := 0; i &lt; 2; i++ {
+				mu.Lock()
+				counter++
+				mu.Unlock()
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	fmt.Println("Final counter", counter)
+}
+					</pre></code>
+				</section>
+
+
+				<section>
+					<h1>CSP</h1>
+					<p class="fragment">Communicating Sequential Processes</p>
+					<p class="fragment">Described in 1978 by Tony Hoare</p>
+				</section>
+				
+				<section>
+					<h2>A Proverb</h2>
+					<p>Don't communicate by sharing memory,<br />share memory by communicating.</p>
+				</section>
+
+
+				<section>
+					<h2>Channels</h2>
+					<pre><code data-trim data-noescape>
+func main() {
+	input := make(chan int)
+	output := make(chan int)
+
+	go func() {
+		n := &lt;-input
+		n = n * 3
+		output &lt;- n
+	}()
+
+	input &lt;- 14
+	answer := &lt;-output
+
+	fmt.Println("Final answer", answer)
+}
+					</pre></code>
+				</section>
+
+				<section>
+					<h2>Select</h2>
+					<pre><code data-trim data-noescape>
+ch := make(chan string)
+
+// Some code...
+
+timeout := time.After(100 * time.Millisecond)
+
+select {
+case val := &lt;-ch:
+	fmt.Println("Worker gave me:", val)
+case &lt;-timeout:
+	fmt.Println("Took too long! Moving on!")
+}
+					</pre></code>
+				</section>
+
+				<section>
+					<h2>⚠️ Dangers of Concurrency⚠️</h2>
+					<ul>
+						<li>Work can be incomplete.</li>
+						<li>Data can get corrupted.</li>
+						<li>Resources can get leaked.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Random Number Generators</h2>
+				</section>
+
+				<section>
+					<h2>⚠️ Dangers of Concurrency⚠️</h2>
+					<ul>
+						<li>Work can be incomplete.</li>
+						<li>Data can get corrupted.</li>
+						<li>Resources can get leaked.</li>
+						<li>Code can become too complex.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Additional Reading</h2>
+					<ul>
+						<li>Cancellation.</li>
+						<li>Pipelines.</li>
+						<li>Concurrency patterns.
+							<ul>
+								<li>Fan out, Fan In.</li>
+								<li>Workers, Feeders.</li>
+								<li>Error Handling.</li>
+								<li>More.</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Takeaways</h2>
+					<ul>
+						<li class="fragment">If serial code is fast enough... <span class="fragment">you're done!</span></li>
+						<li class="fragment">Some problems are well suited for concurrency.</li>
+						<li class="fragment">Some aren't.</li>
+						<li class="fragment">Concurrency is hard.</li>
+						<li class="fragment">Go makes concurrency easier.</li>
+						<li class="fragment">Beware the dangers.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Thank you!</h1>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			Reveal.initialize({
+				history: true,
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>

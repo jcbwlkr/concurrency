@@ -1,0 +1,22 @@
+.reveal section img.logo {
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+	width: 33%;
+	background: none;
+	border: none;
+}
+
+.reveal section img.comic {
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+	max-width: 70%;
+	max-height: 70vh;
+	background: none;
+	border: none;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.reveal section blockquote {
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+	width: 99%;
+}
